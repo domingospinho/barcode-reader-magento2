@@ -1,0 +1,254 @@
+<?php
+    $name = '';
+    $price = 0;
+    $sku = null;
+    $weight = 0;
+    $prices = null;
+    $isQtyDecimal = 0;
+    $categoryIds = array();
+    $product = $block->getProduct();
+    $buttonTitle = __('Add to Cart');
+    if (!empty($product)) {
+        $sku = $product->getSku();
+        $name = $product->getName();
+        $price = $product->getPrice();
+        $weight = $product->getWeight();
+        $categoryIds = $product->getCategoryIds();
+        $prices = $block->getPrices($product->getSku());
+        $isQtyDecimal = $product->getExtensionAttributes()->getStockItem()->getIsQtyDecimal();
+    }
+?>
+<!--<h1><?php //echo BP.'/app/code/Domingos/Pinho/prices.json'; ?></h1>-->
+<div class="main-wrapper">
+    <?php if (empty($product)): ?>
+        <?php $_productCollection = $block->getNearProducts(); ?>
+        <?php if ($_productCollection->count() > 0): ?>
+            <h3>Produtos relacionados</h3>
+            <?php ?>
+        <?php endif; ?>
+        <?php /** @var $_product \Magento\Catalog\Model\Product */ ?>
+        <?php foreach ($_productCollection as $_product): ?>
+            <?php $image = $block->getUrl('pub/media/catalog').'product'.$_product->getSmallImage(); ?>
+            <div style="width: 48%; height: 130px;">
+                <img src="<?php echo $image; ?>" title="<?php echo $_product->getName(); ?>" alt="<?php echo $_product->getName(); ?>" style="width: 100%;" />
+                <a href="<?php echo $block->getNearProductAction($_product->getSku()); ?>" title="<?php echo $_product->getName(); ?>" alt="<?php echo $_product->getName(); ?>"><?php echo $_product->getName(); ?></a>
+            </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
+    <?php //if (empty($product)): ?>
+        <?php //$collection = $block->findNearProducts(); ?>
+        <?php //foreach ($collection as $index => $item): ?>
+            <?php //$item = (object)$item; ?>
+        <?php //endforeach; ?>
+    <?php //endif; ?>
+    <?php if (!empty($product) && $product->isSaleable()): ?>
+        <div class="product-add-form">
+            <form data-product-sku="<?= $sku ?>"
+                  action="<?= $block->getSubmitUrl($product) ?>" method="post"
+                  id="product_addtocart_form">
+                <input type="hidden" name="product" value="<?= $product->getId() ?>" />
+                <?= $block->getBlockHtml('formkey') ?>
+                <div class="box-tocart">
+                    <div class="fieldset">
+                        <?php //if ($block->shouldRenderQuantity()): ?>
+                        <div class="field qty">
+                            <label class="label" for="qty"><span><?= __('Qty') ?></span></label>
+                            <div class="control">
+                                <!--  data-validate='{"required-number":true,"validate-item-quantity":{"minAllowed":0.1}}'  -->
+                                <input type="number" name="qty" id="qty" value="1" title="<?= __('Qty') ?>" class="input-text qty" data-validate="<?= $block->escapeHtml(json_encode($block->getQuantityValidators())) ?>"
+                                />
+                            </div>
+                        </div>
+                        <?php //endif; ?>
+                        <div class="actions">
+                            <button type="submit" title="<?= $buttonTitle ?>" class="action primary tocart" id="product-addtocart-button">
+                                <span><?= $buttonTitle ?></span>
+                            </button>
+                            <?php //echo $block->getChildHtml('', true) ?>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    <?php endif; ?>
+    <form class="form" action="<?php echo $block->getFormAction() ?>" method="post">
+        <fieldset class="fieldset">
+            <div class="field field-name-name required">
+                <label class="label" for="name">
+                    <span>Name</span>
+                </label>
+                <div class="control">
+                    <textarea name="name" id="name" title="Name" class="input-text required-entry" cols="5" rows="2" data-validate="{required:true}" aria-required="true"><?php echo $name; ?></textarea>
+                    <!--<input id="name" name="name" value="<?php //echo $name; ?>" title="Name" class="input-text required-entry" data-validate="{required:true}" autocomplete="off" aria-required="true" type="text">-->
+                </div>
+            </div>
+            <!--<label for="name">Name</label>-->
+            <!--<input id="name" type="text" value="">-->
+            <div class="field field-name-price required">
+                <label class="label" for="price">
+                    <span>Price</span>
+                </label>
+                <div class="control">
+                    <input id="price" name="price" value="<?php echo $price; ?>" title="Price" class="input-text required-entry" data-validate="{required:true}" autocomplete="off" aria-required="true" type="number" min="0" step="0.01">
+                    <?php if (!empty($prices)): ?>
+                        <a id="price-history-btn" href="javascript:void(0);">Price history</a>
+                        <div class="price-history" style="display: none;">
+                            <ul>
+                                <?php foreach ($prices as $key => $item): ?>
+                                    <li><?php echo sprintf('%s   -   %01.2f €', $key, $item); ?> </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <div class="field field-name-weight required">
+                <label class="label" for="weight">
+                    <span>Weight</span>
+                </label>
+                <div class="control">
+                    <input id="weight" name="weight" value="<?php echo $weight; ?>" title="Weight" class="input-text required-entry" data-validate="{required:true}" autocomplete="off" aria-required="true" type="number" min="0" step="0.001">
+                </div>
+            </div>
+            <div class="field choice use_decimal_quantity">
+                <input name="use_decimal_quantity" title="Use decimal quantity" value="1" id="use_decimal_quantity" class="checkbox" type="checkbox" <?php echo ((bool)$isQtyDecimal ? 'checked' : ''); ?>>
+                <label for="use_decimal_quantity" class="label"><span>Quantity uses decimals</span></label>
+            </div>
+            <!--<label for="price">Price</label>
+            <input id="price" type="number" value="">-->
+            <div class="field field-name-barcode required">
+                <label class="label" for="barcode">
+                    <span>Bar Code</span>
+                </label>
+                <div class="control">
+                    <input id="barcode" name="barcode" value="<?php echo $this->getBarCode(); ?>" title="Bar Code" class="input-text required-entry" data-validate="{required:true}" autocomplete="off" aria-required="true" type="text">
+                </div>
+            </div>
+            <!--<label for="bar_code">Bar Code</label>
+            <input id="bar_code" type="text" value="<?php //echo $this->getBarCode(); ?>">-->
+            <div class="field field-name-format required">
+                <label class="label" for="format">
+                    <span>Format</span>
+                </label>
+                <div class="control">
+                    <input id="format" name="format" value="<?php echo $this->getFormat(); ?>" title="Format" class="input-text required-entry" data-validate="{required:true}" autocomplete="off" aria-required="true" type="text">
+                </div>
+            </div>
+            <!--<label for="ean">EAN</label>
+            <input id="ean" type="text" value="<?php //echo $this->getEAN(); ?>">-->
+            <div class="field field-name-type required">
+                <label class="label" for="type">
+                    <span>Type</span>
+                </label>
+                <div class="control">
+                    <input id="type" name="type" value="<?php echo $this->getType(); ?>" title="Type" class="input-text required-entry" data-validate="{required:true}" autocomplete="off" aria-required="true" type="text">
+                </div>
+            </div>
+            <?php $categories = $block->getCategories(); ?>
+            <select name="categories[]" multiple>
+                <option value="<?php echo $categories->getId(); ?>" <?php echo (in_array($categories->getId(), $categoryIds) ? 'selected' : ''); ?>><?php echo $categories->getName(); ?></option>
+                <?php foreach ($categories->getChildrenData() as $index => $category): ?>
+                    <?php if ($category->getId() < 40) continue; ?>
+                    <option value="<?php echo $category->getId(); ?>" <?php echo (in_array($category->getId(), $categoryIds) ? 'selected' : ''); ?>>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $category->getName(); ?></option>
+                    <?php foreach ($category->getChildrenData() as $subcategory): ?>
+                        <option value="<?php echo $subcategory->getId(); ?>" <?php echo (in_array($subcategory->getId(), $categoryIds) ? 'selected' : ''); ?>>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $subcategory->getName(); ?></option>
+                        <?php foreach ($subcategory->getChildrenData() as $subsubcategory): ?>
+                            <option value="<?php echo $subsubcategory->getId(); ?>" <?php echo (in_array($subsubcategory->getId(), $categoryIds) ? 'selected' : ''); ?>>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $subsubcategory->getName(); ?></option>
+                        <?php endforeach; ?>
+                    <?php endforeach; ?>
+                <?php endforeach; ?>
+            </select>
+            <a href="<?php echo $block->getCacheAction() ?>">..</a>
+            <!--<label for="type">Type</label>
+            <input id="type" type="text" value="<?php //echo $this->getType(); ?>">-->
+        </fieldset>
+        <div class="actions-toolbar">
+            <div class="primary">
+                <input type="hidden" name="hideit" id="hideit" value="" />
+                <button type="submit" title="Submit" class="action submit primary">
+                    <span>Submit</span>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+<br>
+<div id="graphdiv"></div>
+<style>
+    .main-wrapper {
+        width: 300px;
+        margin: auto;
+        height: 1200px;
+        padding: 10px;
+        display: block;
+        background: lightgrey;
+    }
+    /*.main-wrapper form label {
+        margin: 5px 0 10px 0;
+        display: block;
+    }*/
+    .box-tocart .fieldset > .field,
+    .box-tocart .fieldset > .fields > .field {
+        margin: 0 10px 20px 0;
+        float: left;
+        width: 25%;
+    }
+    .box-tocart .input-text.qty {
+        width: 100%;
+        height: 52px;
+    }
+    .box-tocart .fieldset > .field > .label {
+        display: none;
+    }
+    .box-tocart .action.tocart {
+        width: 70%;
+    }
+    .price-history {
+        margin-top: 20px;
+    }
+    .price-history ul {
+        padding-left: 0;
+        list-style: none;
+    }
+    .price-history ul li {
+        color: #5f5f5f;
+    }
+    select {
+        height: 200px;
+    }
+</style>
+<div id="testdiv">
+    <a>Test anchor tag</a>
+</div>
+
+<script type="text/x-magento-init">
+    {
+        "*": {
+            "teste": {
+                "divElement": "#testdiv"
+            }
+        }
+    }
+</script>
+<script>
+    var prices = <?php echo json_encode($prices); ?>;
+    require(['jquery', 'logger'],function ($, logger) {
+        //debugger;
+        //logger.log('inchoo.js is loaded!!');
+        $(document).ready(function () {
+            //debugger;
+            //logger.log('inchoo.js is loaded!!');
+        });
+        $('#price-history-btn').on('click', function() {
+            //logger.log('inchoo.js is loaded!!');
+            //debugger;
+            var element = $('.price-history');
+            var display = element.css('display');
+            if ('none' === display) {
+                element.show();
+                return;
+            }
+            element.hide();
+        });
+    });
+</script>
